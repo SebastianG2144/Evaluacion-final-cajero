@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Cajero Automático — Maqueta</title>
+  <style>
+    :root{--bg:#0f1724;--panel:#0b1220;--accent:#06b6d4;--muted:#98a0ad;--card:#0b1220}
+    *{box-sizing:border-box;font-family:Inter, system-ui, Arial, sans-serif}
+    body{margin:0;min-height:100vh;background:linear-gradient(180deg,#071023 0%,#071526 60%);color:#e6eef6;display:flex;align-items:center;justify-content:center;padding:20px}
+    .atm{width:920px;max-width:98%;display:grid;grid-template-columns:420px 1fr;gap:20px}
+    .machine{background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);border-radius:14px;padding:18px;box-shadow:0 8px 30px rgba(2,6,23,0.7);border:1px solid rgba(255,255,255,0.03)}
+    .screen{background:linear-gradient(180deg,#021027,#05203a);padding:18px;border-radius:10px;min-height:260px;display:flex;flex-direction:column;gap:12px}
+    h1{margin:0;font-size:18px}
+    p.lead{margin:0;color:var(--muted);font-size:13px}
+    .display{background:#021427;border-radius:8px;padding:14px;min-height:120px;display:flex;flex-direction:column;justify-content:center;align-items:center}
+    .big{font-size:28px;font-weight:600}
+    .muted{color:var(--muted);font-size:13px}
+    .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+    .btn{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.04);padding:12px;border-radius:8px;text-align:center;cursor:pointer;user-select:none}
+    .btn:active{transform:translateY(1px)}
+    .btn.accent{background:linear-gradient(180deg,#044f5b,#036c7a);border-color:rgba(6,182,212,0.2);color:white}
+    .btn.warn{background:linear-gradient(180deg,#6b2b2b,#8c3b3b)}
+
+    /* Right side cards */
+    .panel{background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);padding:18px;border-radius:12px;min-height:260px}
+    .row{display:flex;gap:12px}
+    .card{background:#071428;padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.03)}
+    .transactions{max-height:200px;overflow:auto;margin-top:8px}
+    .tx{display:flex;justify-content:space-between;padding:8px 6px;border-bottom:1px dashed rgba(255,255,255,0.02)}
+
+    /* small helpers */
+    .kbd{background:#031826;padding:6px 8px;border-radius:6px;font-family:monospace}
+    footer{margin-top:12px;color:var(--muted);font-size:13px;text-align:center}
+
+    @media (max-width:760px){.atm{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+  <div class="atm">
+    <div class="machine">
+      <div class="screen">
+        <header>
+          <h1>Cajero Automático — Maqueta</h1>
+          <p class="lead">Simulación local (sin conexión). PIN por defecto: <span class="kbd">1234</span></p>
+        </header>
+
+        <div class="display" id="display">
+          <div class="muted" id="status">Ingrese su tarjeta (simular) o pulse <strong>Iniciar</strong></div>
+          <div class="big" id="main">Bienvenido</div>
+          <div class="muted" id="sub">Seleccione una operación</div>
+        </div>
+
+        <div style="display:flex;gap:10px;align-items:center;margin-top:8px">
+          <div style="flex:1">
+            <div class="keypad" id="keypad">
+              <!-- números -->
+            </div>
+          </div>
+          <div style="width:120px;display:flex;flex-direction:column;gap:8px">
+            <div class="btn accent" id="btnEnter">ENTRAR</div>
+            <div class="btn" id="btnClear">BORRAR</div>
+            <div class="btn warn" id="btnCancel">CANCELAR</div>
+          </div>
+        </div>
+
+      </div>
+
+      <footer>
+        <small>Maqueta creada en HTML/CSS/JS — puedes personalizarla</small>
+      </footer>
+    </div>
+
+    <div class="panel">
+      <div class="row">
+        <div class="card" style="flex:1">
+          <strong>Cuenta</strong>
+          <div class="muted">Titular: <span id="holder">Usuario Demo</span></div>
+          <div style="margin-top:10px;font-size:28px;font-weight:700" id="balance">S/ 1 500.00</div>
+          <div class="muted">Moneda: Sol (PEN)</div>
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <div class="btn" id="btnConsulta">Consultar saldo</div>
+            <div class="btn" id="btnRetirar">Retirar</div>
+            <div class="btn" id="btnDepositar">Depositar</div>
+          </div>
+        </div>
+
+        <div class="card" style="width:220px">
+          <strong>Operaciones rápidas</strong>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+            <div class="btn" data-amount="20">S/ 20</div>
+            <div class="btn" data-amount="50">S/ 50</div>
+            <div class="btn" data-amount="100">S/ 100</div>
+            <div class="btn" data-amount="200">S/ 200</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:14px">
+        <strong>Historial de transacciones</strong>
+        <div class="transactions" id="txList">
+          <!-- lista -->
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Estado simulado
+    const state = {
+      pin: '1234',
+      entered: '',
+      logged: false,
+      balance: 1500.0,
+      history: []
+    }
+
+    // Elementos
+    const keypad = document.getElementById('keypad')
+    const main = document.getElementById('main')
+    const sub = document.getElementById('sub')
+    const status = document.getElementById('status')
+    const balanceEl = document.getElementById('balance')
+    const txList = document.getElementById('txList')
+
+    // Construir teclas 1-9, 0
+    const keys = ['1','2','3','4','5','6','7','8','9','0']
+    keys.forEach(k=>{
+      const b = document.createElement('div')
+      b.className='btn'
+      b.textContent=k
+      b.tabIndex=0
+      b.addEventListener('click',()=>onKey(k))
+      keypad.appendChild(b)
+    })
+
+    // Botones de acción
+    document.getElementById('btnEnter').addEventListener('click',onEnter)
+    document.getElementById('btnClear').addEventListener('click',onClear)
+    document.getElementById('btnCancel').addEventListener('click',onCancel)
+    document.getElementById('btnConsulta').addEventListener('click',consultarSaldo)
+    document.getElementById('btnRetirar').addEventListener('click',()=>startWithdraw())
+    document.getElementById('btnDepositar').addEventListener('click',()=>startDeposit())
+
+    // Operaciones rapidas
+    document.querySelectorAll('[data-amount]').forEach(btn=>{
+      btn.addEventListener('click',()=>quickWithdraw(Number(btn.dataset.amount)))
+    })
+
+    function onKey(k){
+      if(state.logged){
+        // cuando esté logeado, usar input para montos
+        state.entered += k
+        main.textContent = formatAmountInput(state.entered)
+        sub.textContent = 'Ingrese monto'
+      } else {
+        if(state.entered.length>=6) return
+        state.entered += k
+        main.textContent = '*'.repeat(state.entered.length)
+        sub.textContent = 'Ingrese PIN'
+      }
+    }
+
+    function onClear(){
+      state.entered = ''
+      if(state.logged){ main.textContent = '0' ; sub.textContent = 'Ingrese monto' }
+      else { main.textContent=''; sub.textContent='Ingrese PIN' }
+    }
+    function onCancel(){
+      state.entered = ''
+      state.logged = false
+      main.textContent = 'Operación cancelada'
+      sub.textContent = 'Presione ENTRAR para iniciar'
+      status.textContent = 'Tarjeta expulsada (simulado)'
+      setTimeout(()=>{
+        main.textContent='Bienvenido'
+        sub.textContent='Seleccione una operación'
+        status.textContent = 'Ingrese su tarjeta (simular) o pulse Iniciar'
+      },1200)
+    }
+
+    function onEnter(){
+      if(!state.logged){
+        // verificar PIN
+        if(state.entered === state.pin){
+          state.logged = true
+          state.entered = ''
+          main.textContent = 'PIN correcto'
+          sub.textContent = 'Elija: Consulta / Retirar / Depositar'
+          status.textContent = 'Cuenta autenticada'
+          refreshBalance()
+        } else {
+          main.textContent = 'PIN incorrecto'
+          sub.textContent = 'Intente de nuevo'
+          state.entered = ''
+        }
+      } else {
+        // cuando ya está logeado, usar el valor ingresado como monto
+        const amt = Number(state.entered || 0)
+        if(amt<=0){ main.textContent='Monto inválido'; sub.textContent='Ingrese monto' ; state.entered=''; return }
+        // decidir si estamos en retiro o deposito según sub
+        if(sub.dataset.mode === 'withdraw'){
+          performWithdraw(amt)
+        } else if(sub.dataset.mode === 'deposit'){
+          performDeposit(amt)
+        } else {
+          main.textContent='Seleccione operación primero'
+        }
+        state.entered=''
+      }
+    }
+
+    function consultarSaldo(){
+      if(!state.logged){ main.textContent='Debe ingresar PIN'; sub.textContent='Ingrese PIN primero'; return }
+      main.textContent = formatMoney(state.balance)
+      sub.textContent = 'Saldo disponible'
+    }
+
+    function startWithdraw(){
+      if(!state.logged){ main.textContent='Debe ingresar PIN'; sub.textContent='Ingrese PIN primero'; return }
+      sub.dataset.mode = 'withdraw'
+      sub.textContent = 'Ingrese monto a retirar y pulse ENTRAR'
+      main.textContent = '0'
+      state.entered = ''
+    }
+
+    function startDeposit(){
+      if(!state.logged){ main.textContent='Debe ingresar PIN'; sub.textContent='Ingrese PIN primero'; return }
+      sub.dataset.mode = 'deposit'
+      sub.textContent = 'Ingrese monto a depositar y pulse ENTRAR'
+      main.textContent = '0'
+      state.entered = ''
+    }
+
+    function performWithdraw(amount){
+      if(amount > state.balance){
+        main.textContent = 'Fondos insuficientes'
+        sub.textContent = 'Operación cancelada'
+        return
+      }
+      // Simular dispensar billetes (denominaciones simples)
+      const denominations = [200,100,50,20,10,5]
+      let remaining = amount
+      const used = {}
+      denominations.forEach(d=>{
+        used[d] = Math.floor(remaining/d)
+        remaining -= used[d]*d
+      })
+      if(remaining !== 0){
+        main.textContent = 'Monto no divisible en billetes disponibles'
+        sub.textContent = 'Elija otro monto'
+        return
+      }
+      state.balance -= amount
+      pushTx('Retiro', -amount)
+      refreshBalance()
+      main.textContent = `Retirado: S/ ${amount.toFixed(2)}`
+      sub.textContent = 'Retire su efectivo (simulado)'
+    }
+
+    function performDeposit(amount){
+      state.balance += amount
+      pushTx('Depósito', amount)
+      refreshBalance()
+      main.textContent = `Depositado: S/ ${amount.toFixed(2)}`
+      sub.textContent = 'Depósito registrado (simulado)'
+    }
+
+    function quickWithdraw(amount){
+      if(!state.logged){ main.textContent='Debe ingresar PIN'; sub.textContent='Ingrese PIN primero'; return }
+      performWithdraw(amount)
+    }
+
+    function pushTx(type, amount){
+      const tx = {date: new Date().toLocaleString(), type, amount}
+      state.history.unshift(tx)
+      renderTx()
+    }
+
+    function renderTx(){
+      txList.innerHTML = ''
+      if(state.history.length===0){ txList.innerHTML = '<div class="muted">Sin transacciones</div>'; return }
+      state.history.slice(0,20).forEach(t=>{
+        const div=document.createElement('div')
+        div.className='tx'
+        div.innerHTML = `<div>${t.date} · ${t.type}</div><div>${t.amount<0?'-':'+'} S/ ${Math.abs(t.amount).toFixed(2)}</div>`
+        txList.appendChild(div)
+      })
+    }
+
+    function refreshBalance(){
+      balanceEl.textContent = 'S/ ' + state.balance.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+    }
+
+    function formatMoney(v){ return 'S/ ' + Number(v).toFixed(2) }
+    function formatAmountInput(s){ if(!s) return '0'; return 'S/ ' + Number(s).toLocaleString('en-US') }
+
+    // Teclas del teclado físico (opcional)
+    document.addEventListener('keydown',e=>{
+      if(e.key>= '0' && e.key<='9') onKey(e.key)
+      if(e.key === 'Enter') onEnter()
+      if(e.key === 'Backspace') onClear()
+      if(e.key === 'Escape') onCancel()
+    })
+
+    // Inicializar
+    refreshBalance()
+    renderTx()
+
+  </script>
+</body>
+</html>

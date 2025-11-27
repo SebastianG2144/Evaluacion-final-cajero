@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cajero Automático</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #0b1a33;
+        color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+    .atm {
+        background: #123670;
+        padding: 20px;
+        border-radius: 15px;
+        width: 350px;
+        text-align: center;
+        box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+    button {
+        width: 100%;
+        padding: 10px;
+        margin-top: 10px;
+        border: none;
+        border-radius: 10px;
+        background: #ffb703;
+        font-size: 18px;
+        cursor: pointer;
+    }
+    input {
+        width: 90%;
+        padding: 10px;
+        border-radius: 10px;
+        border: none;
+        margin-top: 10px;
+    }
+</style>
+</head>
+<body>
+<div class="atm" id="pantalla">
+    <h2>Bienvenido</h2>
+    <p>Selecciona una cuenta</p>
+    <button onclick="seleccionarCuenta(0)">Mali</button>
+    <button onclick="seleccionarCuenta(1)">Gera</button>
+    <button onclick="seleccionarCuenta(2)">Sabi</button>
+</div>
+
+<script>
+let cuentas = [
+    {nombre: "Mali", saldo: 200, password: "1234", dni: 44788834 },
+    {nombre: "Gera", saldo: 150, password: "5678", dni: 10247439 },
+    {nombre: "Sabi", saldo: 60, password: "9102", dni: 98005362 }
+];
+let cuentaSeleccionada = null;
+
+function seleccionarCuenta(i) {
+    cuentaSeleccionada = cuentas[i];
+    document.getElementById("pantalla").innerHTML = `
+        <h2>Cuenta: ${cuentaSeleccionada.nombre}</h2>
+        <p>Ingresa tu contraseña</p>
+        <input id='pass' type='password' />
+        <button onclick='validarPassword()'>Ingresar</button>
+    `;
+}
+
+function validarPassword() {
+    let pass = document.getElementById("pass").value;
+    if (pass === cuentaSeleccionada.password) {
+        menuPrincipal();
+    } else {
+        alert("Contraseña incorrecta");
+    }
+}
+
+function menuPrincipal() {
+    document.getElementById("pantalla").innerHTML = `
+        <h2>Hola, ${cuentaSeleccionada.nombre}</h2>
+        <button onclick='consultarSaldo()'>Consultar saldo</button>
+        <button onclick='ingresarMonto()'>Ingresar monto</button>
+        <button onclick='retirarMonto()'>Retirar monto</button>
+        <button onclick='volverInicio()' style='background:#d62828'>Salir</button>
+    `;
+}
+
+function consultarSaldo() {
+    document.getElementById("pantalla").innerHTML = `
+        <h2>Saldo Actual</h2>
+        <p>S/ ${cuentaSeleccionada.saldo}</p>
+        <button onclick='menuPrincipal()'>Volver</button>
+    `;
+}
+
+function ingresarMonto() {
+    document.getElementById("pantalla").innerHTML = `
+        <h2>Ingresar Monto</h2>
+        <input id='monto' type='number' />
+        <button onclick='confirmarIngreso()'>Ingresar</button>
+    `;
+}
+
+function confirmarIngreso() {
+    let monto = Number(document.getElementById("monto").value);
+    if (monto > 0) {
+        cuentaSeleccionada.saldo += monto;
+        document.getElementById("pantalla").innerHTML = `
+            <h2>Monto ingresado: S/ ${monto}</h2>
+            <p>Nuevo saldo: S/ ${cuentaSeleccionada.saldo}</p>
+            <button onclick='menuPrincipal()'>Volver</button>
+        `;
+    }
+}
+
+function retirarMonto() {
+    document.getElementById("pantalla").innerHTML = `
+        <h2>Retirar Monto</h2>
+        <input id='monto' type='number' />
+        <button onclick='confirmarRetiro()'>Retirar</button>
+    `;
+}
+
+function confirmarRetiro() {
+    let monto = Number(document.getElementById("monto").value);
+    if (monto > 0 && cuentaSeleccionada.saldo - monto >= 0) {
+        cuentaSeleccionada.saldo -= monto;
+        document.getElementById("pantalla").innerHTML = `
+            <h2>Monto retirado: S/ ${monto}</h2>
+            <p>Nuevo saldo: S/ ${cuentaSeleccionada.saldo}</p>
+            <button onclick='menuPrincipal()'>Volver</button>
+        `;
+    } else {
+        alert("No puedes retirar más de tu saldo disponible");
+    }
+}
+
+function volverInicio() {
+    location.reload();
+}
+</script>
+</body>
+</html>
